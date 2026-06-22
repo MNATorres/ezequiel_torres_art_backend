@@ -1,0 +1,27 @@
+# Normalize line endings to LF on commit, regardless of OS.
+# Working-copy line endings are left to each developer's core.autocrlf setting.
+* text=auto eol=lf
+
+# Explicit text files (LF in repo)
+*.ts        text eol=lf
+*.js        text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.env       text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+Dockerfile  text eol=lf
+
+# Lock files
+package-lock.json text eol=lf
+
+# Binary assets (never diffed as text)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary

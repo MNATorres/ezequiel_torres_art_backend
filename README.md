@@ -65,6 +65,37 @@ flowchart TB
     UserRepo --> UserM
     UserM --> DB
     App -. reads .-> Env
+
+    classDef client fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e,stroke-width:2px
+    classDef global fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:2px
+    classDef routes fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,stroke-width:2px
+    classDef security fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+    classDef ctrl fill:#cffafe,stroke:#0891b2,color:#164e63,stroke-width:2px
+    classDef svc fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-width:2px
+    classDef repo fill:#ffedd5,stroke:#ea580c,color:#7c2d12,stroke-width:2px
+    classDef model fill:#e0e7ff,stroke:#4f46e5,color:#312e81,stroke-width:2px
+    classDef infra fill:#f3f4f6,stroke:#6b7280,color:#1f2937,stroke-width:2px
+    classDef db fill:#fce7f3,stroke:#db2777,color:#831843,stroke-width:2px
+
+    class Client client
+    class Global global
+    class AuthR,UserR routes
+    class AuthMW,RoleMW,ValMW security
+    class AuthC,UserC ctrl
+    class AuthS,UserS svc
+    class UserRepo repo
+    class UserM model
+    class Env infra
+    class DB db
+
+    style App fill:#f8fafc,stroke:#475569,color:#0f172a,stroke-width:2px
+    style Routes fill:#faf5ff,stroke:#7c3aed,color:#4c1d95
+    style MW fill:#fef2f2,stroke:#dc2626,color:#7f1d1d
+    style Ctrl fill:#ecfeff,stroke:#0891b2,color:#164e63
+    style Svc fill:#f0fdf4,stroke:#16a34a,color:#14532d
+    style Repo fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    style Model fill:#eef2ff,stroke:#4f46e5,color:#312e81
+    style Infra fill:#f9fafb,stroke:#6b7280,color:#1f2937
 ```
 
 **Request lifecycle (protected route):** the client sends an HTTP request → global middlewares (`helmet`, `cors`, `express.json`) run first → the router dispatches to the matching handler → `authenticate` verifies the JWT and attaches `req.user` → `authorize` checks the role against the allow-list → `validate` parses `body`/`query`/`params` with Zod → the controller delegates to a service → the service applies business rules (hashing, token signing) and calls the repository → the repository persists/reads through the Mongoose model → MongoDB.
