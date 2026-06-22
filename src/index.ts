@@ -11,10 +11,14 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 
+import userRoutes from './routes/user.routes';
+
 // Routes
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
+
+app.use('/api/users', userRoutes);
 
 // Start Server
 const startServer = async () => {
