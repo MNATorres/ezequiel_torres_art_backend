@@ -17,7 +17,7 @@ export class UserController {
     }
   };
 
-  getUserById = async (req: Request, res: Response, next: NextFunction) => {
+  getUserById = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
       const user = await this.userService.getUserById(req.params.id);
       res.status(200).json(user);
@@ -35,7 +35,7 @@ export class UserController {
     }
   };
 
-  updateUser = async (req: Request, res: Response, next: NextFunction) => {
+  updateUser = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
       const user = await this.userService.updateUser(req.params.id, req.body);
       res.status(200).json(user);
@@ -44,7 +44,7 @@ export class UserController {
     }
   };
 
-  deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  deleteUser = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
       const user = await this.userService.deleteUser(req.params.id);
       res.status(200).json({ message: 'User deleted successfully', user });

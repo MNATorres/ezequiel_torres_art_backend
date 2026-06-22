@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { UserRepository } from '../repositories/user.repository';
 import { LoginInput } from '../schemas/auth.schema';
 import { env } from '../config/env';
@@ -28,7 +28,7 @@ export class AuthService {
     };
 
     const token = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+      expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
     });
 
     const userObject = user.toObject();
