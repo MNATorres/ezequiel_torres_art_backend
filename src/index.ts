@@ -12,6 +12,7 @@ app.use(cors());
 app.use(helmet());
 
 import userRoutes from './routes/user.routes';
+import authRoutes from './routes/auth.routes';
 
 // Routes
 app.get('/health', (req, res) => {
@@ -19,6 +20,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Start Server
 const startServer = async () => {
