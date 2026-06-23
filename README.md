@@ -187,14 +187,17 @@ Type-checking only (no emit): `npx tsc --noEmit`.
 
 Base URL: `http://localhost:${PORT}/api`
 
-| Method   | Path          | Auth | Roles           | Description                                    |
-| -------- | ------------- | ---- | --------------- | ---------------------------------------------- |
-| `GET`    | `/health`     | —    | —               | Liveness probe                                 |
-| `POST`   | `/auth/login` | —    | —               | Returns `{ token, user }` on valid credentials |
-| `GET`    | `/users`      | JWT  | `ADMIN`, `USER` | List users                                     |
-| `GET`    | `/users/:id`  | JWT  | `ADMIN`, `USER` | Get user by id                                 |
-| `POST`   | `/users`      | JWT  | `ADMIN`, `USER` | Create user (password is hashed with bcrypt)   |
-| `PUT`    | `/users/:id`  | JWT  | `ADMIN`, `USER` | Update user (password re-hashed if present)    |
-| `DELETE` | `/users/:id`  | JWT  | `ADMIN`, `USER` | Delete user                                    |
+| Method   | Path             | Auth | Roles          | Description                                                      |
+| -------- | ---------------- | ---- | -------------- | -------------------------------------------------------------- |
+| `GET`    | `/health`        | —    | —              | Liveness probe                                                  |
+| `POST`   | `/auth/register` | —    | —              | Public sign-up; always creates a `USER`. Returns `{ token, user }` |
+| `POST`   | `/auth/login`    | —    | —              | Returns `{ token, user }` on valid credentials                 |
+| `GET`    | `/users`         | JWT  | `ADMIN`        | List users                                                      |
+| `POST`   | `/users`         | JWT  | `ADMIN`        | Create user, including assigning a role (password hashed with bcrypt) |
+| `GET`    | `/users/:id`     | JWT  | self or `ADMIN`| Get user by id                                                  |
+| `PUT`    | `/users/:id`     | JWT  | self or `ADMIN`| Update user (password re-hashed if present; non-admins cannot change `role`) |
+| `DELETE` | `/users/:id`     | JWT  | `ADMIN`        | Delete user                                                     |
 
 Protected requests must include the header `Authorization: Bearer <token>`. Unauthenticated requests return `401`; authenticated requests with an insufficient role return `403`.
+
+"self or `ADMIN`" means a non-admin may only act on their own record (matching `:id`); admins may act on any. On `PUT`, a non-admin attempting to set the `role` field is rejected with `403`.
