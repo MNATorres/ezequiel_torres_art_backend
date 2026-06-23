@@ -7,8 +7,8 @@ import { env } from '../config/env';
 export class AuthService {
   private userRepository: UserRepository;
 
-  constructor() {
-    this.userRepository = new UserRepository();
+  constructor(userRepository = new UserRepository()) {
+    this.userRepository = userRepository;
   }
 
   async login(data: LoginInput) {
