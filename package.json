@@ -8,8 +8,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsup",
     "test": "tsx --test \"src/**/*.test.ts\"",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
   },
