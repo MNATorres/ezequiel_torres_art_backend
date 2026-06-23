@@ -2,44 +2,37 @@ import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticate } from '../middlewares/auth.middleware';
-import { authorize } from '../middlewares/role.middleware';
+import { authorize, authorizeSelfOrAdmin, preventRoleEscalation } from '../middlewares/role.middleware';
 import { createUserSchema, updateUserSchema, getUserByIdSchema } from '../schemas/user.schema';
 import { UserRole } from '../models/user.model';
 
 const router = Router();
 const userController = new UserController();
 
-router.get(
-  '/',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.USER]),
-  userController.getAllUsers
-);
-router.get(
-  '/:id',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.USER]),
-  validate(getUserByIdSchema),
-  userController.getUserById
-);
-router.post(
-  '/',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.USER]),
-  validate(createUserSchema),
-  userController.createUser
-);
+// Every route requires a valid token.
+router.use(authenticate);
+
+// Listing every user is an admin-only operation.
+router.get('/', authorize([UserRole.ADMIN]), userController.getAllUsers);
+
+// Creating an arbitrary user (and assigning roles) is admin-only.
+router.post('/', authorize([UserRole.ADMIN]), validate(createUserSchema), userController.createUser);
+
+// A user can read or update their own record; admins can do it for anyone.
+// `preventRoleEscalation` stops a non-admin from promoting themselves via the role field.
+router.get('/:id', validate(getUserByIdSchema), authorizeSelfOrAdmin, userController.getUserById);
 router.put(
   '/:id',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.USER]),
   validate(updateUserSchema),
+  authorizeSelfOrAdmin,
+  preventRoleEscalation,
   userController.updateUser
 );
+
+// Deleting a user is admin-only.
 router.delete(
   '/:id',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.USER]),
+  authorize([UserRole.ADMIN]),
   validate(getUserByIdSchema),
   userController.deleteUser
 );

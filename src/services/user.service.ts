@@ -1,5 +1,6 @@
 import { UserRepository } from '../repositories/user.repository';
 import { CreateUserInput, UpdateUserInput } from '../schemas/user.schema';
+import { AppError } from '../utils/AppError';
 import bcrypt from 'bcrypt';
 
 export class UserService {
@@ -15,14 +16,14 @@ export class UserService {
 
   async getUserById(id: string) {
     const user = await this.userRepository.findById(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError(404, 'User not found');
     return user;
   }
 
   async createUser(data: CreateUserInput) {
     const existingUser = await this.userRepository.findByEmail(data.email);
     if (existingUser) {
-      throw new Error('Email already in use');
+      throw new AppError(409, 'Email already in use');
     }
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(data.password, saltRounds);
@@ -45,13 +46,13 @@ export class UserService {
     }
 
     const user = await this.userRepository.update(id, updateData);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError(404, 'User not found');
     return user;
   }
 
   async deleteUser(id: string) {
     const user = await this.userRepository.delete(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError(404, 'User not found');
     return user;
   }
 }
