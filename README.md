@@ -102,19 +102,19 @@ flowchart TB
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js (target `node20`) |
-| Language | TypeScript (strict mode) |
-| HTTP framework | Express 5 |
-| Database | MongoDB via Mongoose |
-| Validation | Zod 4 (request schemas + env validation) |
-| Authentication | `jsonwebtoken` (JWT) + `bcrypt` (password hashing) |
-| Security headers / CORS | `helmet`, `cors` |
-| Config | `dotenv` + Zod schema validation |
-| Dev runner | `tsx` (watch mode) |
-| Bundler | `tsup` (esbuild-based) |
-| Container | `docker-compose` for MongoDB |
+| Layer                   | Technology                                         |
+| ----------------------- | -------------------------------------------------- |
+| Runtime                 | Node.js (target `node20`)                          |
+| Language                | TypeScript (strict mode)                           |
+| HTTP framework          | Express 5                                          |
+| Database                | MongoDB via Mongoose                               |
+| Validation              | Zod 4 (request schemas + env validation)           |
+| Authentication          | `jsonwebtoken` (JWT) + `bcrypt` (password hashing) |
+| Security headers / CORS | `helmet`, `cors`                                   |
+| Config                  | `dotenv` + Zod schema validation                   |
+| Dev runner              | `tsx` (watch mode)                                 |
+| Bundler                 | `tsup` (esbuild-based)                             |
+| Container               | `docker-compose` for MongoDB                       |
 
 ## Project Structure
 
@@ -155,13 +155,13 @@ The server boots on `http://localhost:${PORT}` and exposes a health probe at `GE
 
 All variables are validated at startup by `src/config/env.ts`. Missing or invalid values cause the process to exit with a descriptive error.
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `PORT` | no | `3000` | HTTP port the server listens on |
-| `NODE_ENV` | no | `development` | One of `development`, `production`, `test` |
-| `MONGO_URI` | yes | — | MongoDB connection string (must be a valid URL) |
-| `JWT_SECRET` | yes | — | Secret used to sign JWTs (min. 10 chars) |
-| `JWT_EXPIRES_IN` | no | `1d` | JWT lifetime (e.g. `1h`, `7d`) |
+| Variable         | Required | Default       | Description                                     |
+| ---------------- | -------- | ------------- | ----------------------------------------------- |
+| `PORT`           | no       | `3000`        | HTTP port the server listens on                 |
+| `NODE_ENV`       | no       | `development` | One of `development`, `production`, `test`      |
+| `MONGO_URI`      | yes      | —             | MongoDB connection string (must be a valid URL) |
+| `JWT_SECRET`     | yes      | —             | Secret used to sign JWTs (min. 10 chars)        |
+| `JWT_EXPIRES_IN` | no       | `1d`          | JWT lifetime (e.g. `1h`, `7d`)                  |
 
 Example `.env` for the bundled `docker-compose.yml`:
 
@@ -175,11 +175,11 @@ JWT_EXPIRES_IN=1d
 
 ## Available Scripts
 
-| Script | Purpose |
-|---|---|
-| `npm run dev` | Start the server in watch mode via `tsx` |
-| `npm run build` | Bundle to `dist/` via `tsup` |
-| `npm start` | Run the compiled bundle (`node dist/index.js`) |
+| Script          | Purpose                                        |
+| --------------- | ---------------------------------------------- |
+| `npm run dev`   | Start the server in watch mode via `tsx`       |
+| `npm run build` | Bundle to `dist/` via `tsup`                   |
+| `npm start`     | Run the compiled bundle (`node dist/index.js`) |
 
 Type-checking only (no emit): `npx tsc --noEmit`.
 
@@ -187,14 +187,14 @@ Type-checking only (no emit): `npx tsc --noEmit`.
 
 Base URL: `http://localhost:${PORT}/api`
 
-| Method | Path | Auth | Roles | Description |
-|---|---|---|---|---|
-| `GET` | `/health` | — | — | Liveness probe |
-| `POST` | `/auth/login` | — | — | Returns `{ token, user }` on valid credentials |
-| `GET` | `/users` | JWT | `ADMIN`, `USER` | List users |
-| `GET` | `/users/:id` | JWT | `ADMIN`, `USER` | Get user by id |
-| `POST` | `/users` | JWT | `ADMIN`, `USER` | Create user (password is hashed with bcrypt) |
-| `PUT` | `/users/:id` | JWT | `ADMIN`, `USER` | Update user (password re-hashed if present) |
-| `DELETE` | `/users/:id` | JWT | `ADMIN`, `USER` | Delete user |
+| Method   | Path          | Auth | Roles           | Description                                    |
+| -------- | ------------- | ---- | --------------- | ---------------------------------------------- |
+| `GET`    | `/health`     | —    | —               | Liveness probe                                 |
+| `POST`   | `/auth/login` | —    | —               | Returns `{ token, user }` on valid credentials |
+| `GET`    | `/users`      | JWT  | `ADMIN`, `USER` | List users                                     |
+| `GET`    | `/users/:id`  | JWT  | `ADMIN`, `USER` | Get user by id                                 |
+| `POST`   | `/users`      | JWT  | `ADMIN`, `USER` | Create user (password is hashed with bcrypt)   |
+| `PUT`    | `/users/:id`  | JWT  | `ADMIN`, `USER` | Update user (password re-hashed if present)    |
+| `DELETE` | `/users/:id`  | JWT  | `ADMIN`, `USER` | Delete user                                    |
 
 Protected requests must include the header `Authorization: Bearer <token>`. Unauthenticated requests return `401`; authenticated requests with an insufficient role return `403`.

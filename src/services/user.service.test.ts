@@ -51,7 +51,10 @@ describe('UserService', () => {
       findById: async () => null,
     } as unknown as UserRepository;
 
-    await assert.rejects(() => new UserService(repository).getUserById('missing-id'), /User not found/);
+    await assert.rejects(
+      () => new UserService(repository).getUserById('missing-id'),
+      /User not found/
+    );
   });
 
   it('creates a user with a hashed password and omits password from the response', async () => {
@@ -92,7 +95,12 @@ describe('UserService', () => {
     } as unknown as UserRepository;
 
     await assert.rejects(
-      () => new UserService(repository).createUser({ name: 'Ezequiel Torres', email: 'ezequiel@example.com', password: 'secret123' }),
+      () =>
+        new UserService(repository).createUser({
+          name: 'Ezequiel Torres',
+          email: 'ezequiel@example.com',
+          password: 'secret123',
+        }),
       /Email already in use/
     );
   });
@@ -123,7 +131,10 @@ describe('UserService', () => {
       update: async () => null,
     } as unknown as UserRepository;
 
-    await assert.rejects(() => new UserService(repository).updateUser('missing-id', { name: 'Missing User' }), /User not found/);
+    await assert.rejects(
+      () => new UserService(repository).updateUser('missing-id', { name: 'Missing User' }),
+      /User not found/
+    );
   });
 
   it('deletes a user by id', async () => {
@@ -142,6 +153,9 @@ describe('UserService', () => {
       delete: async () => null,
     } as unknown as UserRepository;
 
-    await assert.rejects(() => new UserService(repository).deleteUser('missing-id'), /User not found/);
+    await assert.rejects(
+      () => new UserService(repository).deleteUser('missing-id'),
+      /User not found/
+    );
   });
 });

@@ -56,7 +56,8 @@ describe('AuthService', () => {
     } as unknown as UserRepository;
 
     await assert.rejects(
-      () => new AuthService(repository).login({ email: 'missing@example.com', password: 'secret123' }),
+      () =>
+        new AuthService(repository).login({ email: 'missing@example.com', password: 'secret123' }),
       /Invalid email or password/
     );
   });
@@ -68,7 +69,11 @@ describe('AuthService', () => {
     } as unknown as UserRepository;
 
     await assert.rejects(
-      () => new AuthService(repository).login({ email: 'ezequiel@example.com', password: 'wrong-password' }),
+      () =>
+        new AuthService(repository).login({
+          email: 'ezequiel@example.com',
+          password: 'wrong-password',
+        }),
       /Invalid email or password/
     );
   });

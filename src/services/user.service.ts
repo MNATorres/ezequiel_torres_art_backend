@@ -26,12 +26,12 @@ export class UserService {
     }
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-    
+
     const user = await this.userRepository.create({
       ...data,
       password: hashedPassword,
     });
-    
+
     const userObject = user.toObject();
     delete userObject.password;
     return userObject;
@@ -43,7 +43,7 @@ export class UserService {
       const saltRounds = 10;
       updateData.password = await bcrypt.hash(data.password, saltRounds);
     }
-    
+
     const user = await this.userRepository.update(id, updateData);
     if (!user) throw new Error('User not found');
     return user;
