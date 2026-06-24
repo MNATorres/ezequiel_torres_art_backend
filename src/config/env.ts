@@ -9,6 +9,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   JWT_SECRET: z.string().min(10),
   JWT_EXPIRES_IN: z.string().default('1d'),
+  // Public base URL of this API, used to build absolute URLs for uploaded files.
+  API_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
 });
 
 const _env = envSchema.safeParse(process.env);

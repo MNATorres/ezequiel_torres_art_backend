@@ -7,6 +7,7 @@ export const createExperienceSchema = z.object({
     title: z.string().min(2, 'Title must be at least 2 characters long'),
     date: z.coerce.date(),
     description: z.string().min(2, 'Description must be at least 2 characters long'),
+    imageUrl: z.string().url('imageUrl must be a valid URL').optional(),
   }),
 });
 
@@ -15,6 +16,7 @@ export const updateExperienceSchema = z.object({
     title: z.string().min(2).optional(),
     date: z.coerce.date().optional(),
     description: z.string().min(2).optional(),
+    imageUrl: z.string().url('imageUrl must be a valid URL').optional(),
   }),
   params: z.object({
     id: objectId,
