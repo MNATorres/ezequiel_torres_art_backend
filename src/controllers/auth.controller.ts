@@ -4,8 +4,8 @@ import { AuthService } from '../services/auth.service';
 export class AuthController {
   private authService: AuthService;
 
-  constructor() {
-    this.authService = new AuthService();
+  constructor(authService = new AuthService()) {
+    this.authService = authService;
   }
 
   login = async (req: Request, res: Response, next: NextFunction) => {
