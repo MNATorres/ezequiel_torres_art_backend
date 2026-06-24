@@ -16,6 +16,7 @@ app.use(requestLogger);
 
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
+import experienceRoutes from './routes/experience.routes';
 import { notFound, errorHandler } from './middlewares/error.middleware';
 
 // Routes
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/experiences', experienceRoutes);
 
 // 404 + global error handler (must be registered after the routes)
 app.use(notFound);
