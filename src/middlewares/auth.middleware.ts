@@ -12,8 +12,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET) as { id: string; role: UserRole };
-    req.user = { id: decoded.id, role: decoded.role };
+    const decoded = jwt.verify(token, env.JWT_SECRET) as {
+      id: string;
+      role: UserRole;
+      email: string;
+    };
+    req.user = { id: decoded.id, role: decoded.role, email: decoded.email };
     next();
   } catch {
     return res.status(401).json({ error: 'Unauthorized: Invalid token' });

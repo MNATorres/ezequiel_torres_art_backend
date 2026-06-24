@@ -19,8 +19,8 @@ export class AuthService {
     this.userService = userService;
   }
 
-  private signToken(id: unknown, role: UserRole) {
-    return jwt.sign({ id, role }, env.JWT_SECRET, {
+  private signToken(id: unknown, role: UserRole, email: string) {
+    return jwt.sign({ id, role, email }, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
     });
   }
@@ -40,7 +40,7 @@ export class AuthService {
       throw new AppError(401, 'Invalid email or password');
     }
 
-    const token = this.signToken(user._id, user.role);
+    const token = this.signToken(user._id, user.role, user.email);
 
     const userObject = user.toObject();
     delete userObject.password;
@@ -52,7 +52,7 @@ export class AuthService {
     // Force the USER role so public registration can never create an admin.
     const user = await this.userService.createUser({ ...data, role: UserRole.USER });
 
-    const token = this.signToken(user._id, user.role);
+    const token = this.signToken(user._id, user.role, user.email);
 
     return { token, user };
   }

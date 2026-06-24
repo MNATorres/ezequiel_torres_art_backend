@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env';
 import { connectDB } from './config/db';
+import { logger } from './config/logger';
+import { requestLogger } from './middlewares/request-logger.middleware';
 
 const app = express();
 
@@ -10,6 +12,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
+app.use(requestLogger);
 
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
@@ -31,7 +34,10 @@ app.use(errorHandler);
 const startServer = async () => {
   await connectDB();
   app.listen(env.PORT, () => {
-    console.log(`🚀 Server running in ${env.NODE_ENV} mode on http://localhost:${env.PORT}`);
+    logger.info(
+      { port: env.PORT, env: env.NODE_ENV },
+      `🚀 Server running on http://localhost:${env.PORT}`
+    );
   });
 };
 

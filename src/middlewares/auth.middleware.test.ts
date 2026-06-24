@@ -42,7 +42,10 @@ describe('authenticate middleware', () => {
   });
 
   it('attaches the decoded user and calls next() for a valid token', () => {
-    const token = jwt.sign({ id: 'user-123', role: UserRole.ADMIN }, env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: 'user-123', role: UserRole.ADMIN, email: 'admin@example.com' },
+      env.JWT_SECRET
+    );
     const req = createMockRequest({ headers: { authorization: `Bearer ${token}` } });
     const { res, recorded } = createMockResponse();
     const next = mock.fn();
@@ -51,6 +54,10 @@ describe('authenticate middleware', () => {
 
     assert.equal(recorded.statusCode, undefined);
     assert.equal(next.mock.calls.length, 1);
-    assert.deepEqual(req.user, { id: 'user-123', role: UserRole.ADMIN });
+    assert.deepEqual(req.user, {
+      id: 'user-123',
+      role: UserRole.ADMIN,
+      email: 'admin@example.com',
+    });
   });
 });
