@@ -24,6 +24,6 @@ export class UserRepository {
   }
 
   async delete(id: string): Promise<IUser | null> {
-    return UserModel.findByIdAndDelete(id).exec();
+    return UserModel.findByIdAndDelete(id).select('-password').exec();
   }
 }
