@@ -1,30 +1,12 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { randomUUID } from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { AppError } from '../utils/AppError';
 
-export const UPLOAD_DIR = 'uploads';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-// Ensure the upload directory exists at startup. On a read-only serverless
-// filesystem (e.g. Vercel) this is skipped so the module doesn't crash on
-// import — uploads there must use external storage (Cloudinary), wired up
-// separately.
-try {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-} catch {
-  // read-only filesystem — ignore
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => cb(null, `${randomUUID()}${path.extname(file.originalname)}`),
-});
-
+// Keep the file in memory; it's streamed straight to Cloudinary (no disk).
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {

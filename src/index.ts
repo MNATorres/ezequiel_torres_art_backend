@@ -9,7 +9,6 @@ import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import experienceRoutes from './routes/experience.routes';
 import uploadsRoutes from './routes/uploads.routes';
-import { UPLOAD_DIR } from './middlewares/upload.middleware';
 import { notFound, errorHandler } from './middlewares/error.middleware';
 
 const app = express();
@@ -39,15 +38,6 @@ app.use(async (req, res, next) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
-
-// Serve uploaded files. CORP cross-origin lets other origins (the manager /
-// public site) embed the images via <img>. (No-op on serverless read-only FS.)
-app.use(
-  '/uploads',
-  express.static(UPLOAD_DIR, {
-    setHeaders: (res) => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'),
-  })
-);
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
