@@ -5,6 +5,12 @@ import { env } from './config/env';
 import { connectDB } from './config/db';
 import { logger } from './config/logger';
 import { requestLogger } from './middlewares/request-logger.middleware';
+import userRoutes from './routes/user.routes';
+import authRoutes from './routes/auth.routes';
+import experienceRoutes from './routes/experience.routes';
+import uploadsRoutes from './routes/uploads.routes';
+import { UPLOAD_DIR } from './middlewares/upload.middleware';
+import { notFound, errorHandler } from './middlewares/error.middleware';
 
 const app = express();
 
@@ -14,12 +20,20 @@ app.use(cors());
 app.use(helmet());
 app.use(requestLogger);
 
-import userRoutes from './routes/user.routes';
-import authRoutes from './routes/auth.routes';
-import experienceRoutes from './routes/experience.routes';
-import uploadsRoutes from './routes/uploads.routes';
-import { UPLOAD_DIR } from './middlewares/upload.middleware';
-import { notFound, errorHandler } from './middlewares/error.middleware';
+// Ensure MongoDB is connected before handling any request. The connection is
+// cached, so it's opened once per (cold) instance and reused across requests —
+// this is what makes the app work on serverless platforms like Vercel.
+let dbReady: Promise<void> | null = null;
+app.use(async (req, res, next) => {
+  try {
+    if (!dbReady) dbReady = connectDB();
+    await dbReady;
+    next();
+  } catch (err) {
+    dbReady = null; // let the next request retry the connection
+    next(err);
+  }
+});
 
 // Routes
 app.get('/health', (req, res) => {
@@ -27,7 +41,7 @@ app.get('/health', (req, res) => {
 });
 
 // Serve uploaded files. CORP cross-origin lets other origins (the manager /
-// public site) embed the images via <img>.
+// public site) embed the images via <img>. (No-op on serverless read-only FS.)
 app.use(
   '/uploads',
   express.static(UPLOAD_DIR, {
@@ -44,15 +58,24 @@ app.use('/api/uploads', uploadsRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// Start Server
-const startServer = async () => {
-  await connectDB();
-  app.listen(env.PORT, () => {
-    logger.info(
-      { port: env.PORT, env: env.NODE_ENV },
-      `🚀 Server running on http://localhost:${env.PORT}`
-    );
-  });
-};
+// Long-running server for local dev / non-serverless hosts. On Vercel the app
+// is invoked as a serverless function via the default export below, so we must
+// NOT call app.listen there (Vercel sets the VERCEL env var).
+if (!process.env.VERCEL) {
+  const startServer = async () => {
+    await connectDB();
+    app.listen(env.PORT, () => {
+      logger.info(
+        { port: env.PORT, env: env.NODE_ENV },
+        `🚀 Server running on http://localhost:${env.PORT}`
+      );
+    });
+  };
 
-startServer();
+  startServer().catch((err) => {
+    logger.error({ err }, 'Failed to start server');
+    process.exit(1);
+  });
+}
+
+export default app;

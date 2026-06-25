@@ -8,8 +8,15 @@ import { AppError } from '../utils/AppError';
 export const UPLOAD_DIR = 'uploads';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-// Ensure the upload directory exists at startup.
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// Ensure the upload directory exists at startup. On a read-only serverless
+// filesystem (e.g. Vercel) this is skipped so the module doesn't crash on
+// import — uploads there must use external storage (Cloudinary), wired up
+// separately.
+try {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+} catch {
+  // read-only filesystem — ignore
+}
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
