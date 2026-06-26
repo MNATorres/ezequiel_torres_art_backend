@@ -8,6 +8,7 @@ import { requestLogger } from './middlewares/request-logger.middleware';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import experienceRoutes from './routes/experience.routes';
+import artworkRoutes from './routes/artwork.routes';
 import uploadsRoutes from './routes/uploads.routes';
 import { notFound, errorHandler } from './middlewares/error.middleware';
 
@@ -42,6 +43,7 @@ app.get('/health', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/experiences', experienceRoutes);
+app.use('/api/artworks', artworkRoutes);
 app.use('/api/uploads', uploadsRoutes);
 
 // 404 + global error handler (must be registered after the routes)

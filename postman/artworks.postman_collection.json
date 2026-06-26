@@ -1,0 +1,168 @@
+{
+  "info": {
+    "_postman_id": "c2b8d3f1-2e5a-4b01-ad22-ezequieltorres02",
+    "name": "Ezequiel Torres Art - Artworks",
+    "description": "Requests for the Artworks (\"Arte en Vivo\" gallery) module of the Ezequiel Torres Art backend.\n\nUses the same Local / Cloud environments as the main collection — `baseUrl` and `token` are shared.\n\nFlow:\n1. Run **Auth > Login** in the main collection first so `{{token}}` is saved into the active environment.\n2. **Create artwork** stores the new `{{artworkId}}` automatically; the by-id / update / delete requests reuse it.\n\nPermissions: GET endpoints are **public** (no token). POST / PUT / DELETE require an **authenticated** user (ADMIN or USER).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Get all artworks (public)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/artworks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "artworks"
+          ]
+        },
+        "description": "Lists every artwork, ordered by `order` ascending (then by creation date). Public — no token required."
+      },
+      "response": []
+    },
+    {
+      "name": "Get artwork by id (public)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/artworks/{{artworkId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "artworks",
+            "{{artworkId}}"
+          ]
+        },
+        "description": "Returns a single artwork by id. Public. Returns 404 if not found, 400 if the id is malformed."
+      },
+      "response": []
+    },
+    {
+      "name": "Create artwork (auth)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "const res = pm.response.json();",
+              "if (res && res._id) {",
+              "  pm.environment.set('artworkId', res._id);",
+              "  console.log('Saved artworkId:', res._id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Murales Humanos\",\n  \"description\": \"Cada pincelada transforma la piel en una obra maestra respirante, mezclando la forma humana con narrativas abstractas e hiperrealistas.\",\n  \"imageUrl\": \"https://res.cloudinary.com/demo/image/upload/v1/murales.png\",\n  \"order\": 0\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/artworks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "artworks"
+          ]
+        },
+        "description": "Creates an artwork. Requires a valid `{{token}}`. `imageUrl` and `order` are optional (order defaults to 0). The test script saves the new `_id` as `{{artworkId}}`."
+      },
+      "response": []
+    },
+    {
+      "name": "Update artwork (auth)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Murales Humanos (actualizado)\",\n  \"order\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/artworks/{{artworkId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "artworks",
+            "{{artworkId}}"
+          ]
+        },
+        "description": "Partial update of an artwork. Any subset of `title`, `description`, `imageUrl`, `order` is allowed. Requires a valid `{{token}}`. Change `order` here to reposition the piece in the gallery."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete artwork (auth)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/artworks/{{artworkId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "artworks",
+            "{{artworkId}}"
+          ]
+        },
+        "description": "Deletes an artwork by id. Requires a valid `{{token}}`. Returns a confirmation message plus the deleted document."
+      },
+      "response": []
+    }
+  ]
+}

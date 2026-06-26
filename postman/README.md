@@ -2,7 +2,9 @@
 
 Files in this folder:
 
-- `ezequiel_torres_art.postman_collection.json` — the API collection.
+- `ezequiel_torres_art.postman_collection.json` — the main API collection (Health, Auth, Users).
+- `experiences.postman_collection.json` — Experiences ("Trayectoria") CRUD collection.
+- `artworks.postman_collection.json` — Artworks ("Arte en Vivo" gallery) CRUD collection.
 - `local.postman_environment.json` — environment pointing at `http://localhost:3000`.
 - `cloud.postman_environment.json` — environment for the deployed API (edit `baseUrl`).
 
@@ -19,6 +21,8 @@ Files in this folder:
 | `baseUrl` | API host (switches Local ↔ Cloud)          | Per environment                                |
 | `token`   | Bearer auth (`Authorization` header)       | Auto-saved by **Register** / **Login** scripts |
 | `userId`  | `:id` segment in the Users requests        | Auto-saved by **Register** / **Login** scripts |
+| `experienceId` | `:id` segment in the Experiences requests | Auto-saved by **Experiences → Create experience** |
+| `artworkId` | `:id` segment in the Artworks requests   | Auto-saved by **Artworks → Create artwork**    |
 
 ## Typical flow
 
