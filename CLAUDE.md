@@ -36,7 +36,15 @@ routes → middlewares → controllers → services → repositories → models 
 - **repositories/** — the only place Mongoose query methods are called. Return raw documents/null.
 - **models/** — Mongoose schemas + enums (e.g. `UserRole`).
 - **schemas/** — Zod request schemas + inferred input types.
-- **config/** — `env.ts` (Zod-validated, exits on invalid) and `db.ts`.
+- **config/** — `env.ts` (Zod-validated, exits on invalid), `db.ts`, and `cloudinary.ts`.
+
+### Resource modules
+Two content resources share the **identical** layered shape (model → schema → repository → service → controller → routes, each with colocated `*.test.ts`), both **public reads / authenticated writes**, mounted in `src/index.ts`:
+
+- **experience** (`/api/experiences`) — the artist's "Trayectoria" timeline. Has a required `date`; `findAll` sorts by `date` descending.
+- **artwork** (`/api/artworks`) — the home "Arte en Vivo" gallery. Same shape but no `date`; instead an integer **`order`** (default 0) that drives the piece's position on the public site, so `findAll` sorts by `order` ascending then `createdAt`.
+
+`artwork` is the cleanest template for a new content collection (plain CRUD, no date coercion): clone its six `src/**/artwork.*` files plus the three tests, then mount the router. Image URLs are produced by the upload module (`/api/uploads` → Cloudinary) and stored as the optional `imageUrl` string — the resources never handle file bytes themselves.
 
 ### Error handling (central, do not deviate)
 Code never builds error responses inline in services/controllers. Instead:
