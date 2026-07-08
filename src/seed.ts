@@ -2,16 +2,18 @@ import mongoose from 'mongoose';
 import { env } from './config/env';
 import { UserModel, UserRole } from './models/user.model';
 
-// Bootstrap the allowlisted Google accounts as ADMINs. Idempotent: creates a
+// Bootstrap the ADMIN_GOOGLE_EMAILS accounts as ADMINs. Idempotent: creates a
 // user if missing, promotes an existing one to ADMIN, and skips those already
-// ADMIN. Run once after setting ALLOWED_GOOGLE_EMAILS (and re-run safely).
-const adminEmails = env.ALLOWED_GOOGLE_EMAILS.split(',')
+// ADMIN. Run once after setting ADMIN_GOOGLE_EMAILS (and re-run safely).
+// Non-admin allowlisted emails are left alone — they auto-provision as USER on
+// their first sign-in.
+const adminEmails = env.ADMIN_GOOGLE_EMAILS.split(',')
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
 const seed = async () => {
   if (adminEmails.length === 0) {
-    console.error('❌ Set ALLOWED_GOOGLE_EMAILS with at least one email before seeding.');
+    console.error('❌ Set ADMIN_GOOGLE_EMAILS with at least one email before seeding.');
     process.exit(1);
   }
 

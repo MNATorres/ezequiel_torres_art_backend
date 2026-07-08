@@ -167,7 +167,8 @@ All variables are validated at startup by `src/config/env.ts`. Missing or invali
 | `FIREBASE_PROJECT_ID`    | yes      | —             | Firebase project id (service account)           |
 | `FIREBASE_CLIENT_EMAIL`  | yes      | —             | Firebase service account client email           |
 | `FIREBASE_PRIVATE_KEY`   | yes      | —             | Firebase service account private key (`\n`-escaped) |
-| `ALLOWED_GOOGLE_EMAILS`  | yes      | —             | Comma-separated Google emails allowed to sign in |
+| `ALLOWED_GOOGLE_EMAILS`  | yes      | —             | Comma-separated Google emails allowed to sign in (login gate) |
+| `ADMIN_GOOGLE_EMAILS`    | no       | `''`          | Subset the seed bootstraps as ADMIN; the rest auto-provision as USER |
 
 Example `.env` for the bundled `docker-compose.yml`:
 

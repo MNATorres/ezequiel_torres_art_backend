@@ -22,8 +22,12 @@ const envSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().min(1),
-  // Comma-separated allowlist of Google emails permitted to sign in.
+  // Comma-separated allowlist of Google emails permitted to sign in (the login
+  // gate). Anyone here who is not pre-seeded is auto-provisioned as a USER.
   ALLOWED_GOOGLE_EMAILS: z.string().min(1),
+  // Comma-separated subset of emails the seed script bootstraps as ADMIN. Only
+  // consumed by `npm run seed`; the running app derives roles from Mongo.
+  ADMIN_GOOGLE_EMAILS: z.string().optional().default(''),
 });
 
 const _env = envSchema.safeParse(process.env);
