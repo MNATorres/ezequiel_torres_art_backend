@@ -16,6 +16,14 @@ const envSchema = z.object({
   // cloudinary://<api_key>:<api_secret>@<cloud_name>. Optional so the app still
   // boots without it (only the upload endpoint needs it).
   CLOUDINARY_URL: z.string().optional(),
+  // Firebase Admin service account credentials, used to verify Google ID
+  // tokens sent by the manager. From Project Settings → Service Accounts →
+  // Generate new private key.
+  FIREBASE_PROJECT_ID: z.string().min(1),
+  FIREBASE_CLIENT_EMAIL: z.string().email(),
+  FIREBASE_PRIVATE_KEY: z.string().min(1),
+  // Comma-separated allowlist of Google emails permitted to sign in.
+  ALLOWED_GOOGLE_EMAILS: z.string().min(1),
 });
 
 const _env = envSchema.safeParse(process.env);
