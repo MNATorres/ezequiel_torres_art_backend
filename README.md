@@ -1,6 +1,6 @@
 # ezequiel_torres_art_backend
 
-REST API backend for Ezequiel Torres' art portfolio. Built with a layered architecture (routes → middlewares → controllers → services → repositories → models) on top of Express, Mongoose and TypeScript, with JWT authentication and role-based access control.
+REST API backend for Ezequiel Torres' art portfolio. Built with a layered architecture (routes → middlewares → controllers → services → repositories → models) on top of Express, Mongoose and TypeScript, with Google sign-in (Firebase) authentication, a JWT session, and role-based access control.
 
 ## Architecture
 
@@ -33,8 +33,8 @@ flowchart TB
 
         subgraph Svc["Services — src/services"]
             direction LR
-            AuthS["AuthService<br/>bcrypt.compare • jwt.sign"]
-            UserS["UserService<br/>bcrypt.hash"]
+            AuthS["AuthService<br/>verifyIdToken • allowlist • jwt.sign"]
+            UserS["UserService"]
         end
 
         subgraph Repo["Repositories — src/repositories"]
@@ -98,7 +98,9 @@ flowchart TB
     style Infra fill:#f9fafb,stroke:#6b7280,color:#1f2937
 ```
 
-**Request lifecycle (protected route):** the client sends an HTTP request → global middlewares (`helmet`, `cors`, `express.json`) run first → the router dispatches to the matching handler → `authenticate` verifies the JWT and attaches `req.user` → `authorize` checks the role against the allow-list → `validate` parses `body`/`query`/`params` with Zod → the controller delegates to a service → the service applies business rules (hashing, token signing) and calls the repository → the repository persists/reads through the Mongoose model → MongoDB.
+**Request lifecycle (protected route):** the client sends an HTTP request → global middlewares (`helmet`, `cors`, `express.json`) run first → the router dispatches to the matching handler → `authenticate` verifies the JWT and attaches `req.user` → `authorize` checks the role against the allow-list → `validate` parses `body`/`query`/`params` with Zod → the controller delegates to a service → the service applies business rules (Google ID token verification, JWT signing) and calls the repository → the repository persists/reads through the Mongoose model → MongoDB.
+
+**Login (`POST /api/auth/google`):** the manager signs the user in with Google via Firebase and sends the resulting ID token → `AuthService` verifies it against Firebase Admin, rejects unverified emails or ones outside `ALLOWED_GOOGLE_EMAILS`, finds-or-creates the matching `User`, and signs the same kind of JWT used everywhere else — so every other protected route is unaffected by this swap.
 
 ## Tech Stack
 
@@ -109,7 +111,7 @@ flowchart TB
 | HTTP framework          | Express 5                                          |
 | Database                | MongoDB via Mongoose                               |
 | Validation              | Zod 4 (request schemas + env validation)           |
-| Authentication          | `jsonwebtoken` (JWT) + `bcrypt` (password hashing) |
+| Authentication          | Google sign-in via `firebase-admin`, session issued as a `jsonwebtoken` (JWT) |
 | Security headers / CORS | `helmet`, `cors`                                   |
 | Config                  | `dotenv` + Zod schema validation                   |
 | Dev runner              | `tsx` (watch mode)                                 |
@@ -155,13 +157,17 @@ The server boots on `http://localhost:${PORT}` and exposes a health probe at `GE
 
 All variables are validated at startup by `src/config/env.ts`. Missing or invalid values cause the process to exit with a descriptive error.
 
-| Variable         | Required | Default       | Description                                     |
-| ---------------- | -------- | ------------- | ----------------------------------------------- |
-| `PORT`           | no       | `3000`        | HTTP port the server listens on                 |
-| `NODE_ENV`       | no       | `development` | One of `development`, `production`, `test`      |
-| `MONGO_URI`      | yes      | —             | MongoDB connection string (must be a valid URL) |
-| `JWT_SECRET`     | yes      | —             | Secret used to sign JWTs (min. 10 chars)        |
-| `JWT_EXPIRES_IN` | no       | `1d`          | JWT lifetime (e.g. `1h`, `7d`)                  |
+| Variable                 | Required | Default       | Description                                     |
+| ------------------------ | -------- | ------------- | ----------------------------------------------- |
+| `PORT`                   | no       | `3000`        | HTTP port the server listens on                 |
+| `NODE_ENV`               | no       | `development` | One of `development`, `production`, `test`      |
+| `MONGO_URI`              | yes      | —             | MongoDB connection string (must be a valid URL) |
+| `JWT_SECRET`             | yes      | —             | Secret used to sign JWTs (min. 10 chars)        |
+| `JWT_EXPIRES_IN`         | no       | `1d`          | JWT lifetime (e.g. `1h`, `7d`)                  |
+| `FIREBASE_PROJECT_ID`    | yes      | —             | Firebase project id (service account)           |
+| `FIREBASE_CLIENT_EMAIL`  | yes      | —             | Firebase service account client email           |
+| `FIREBASE_PRIVATE_KEY`   | yes      | —             | Firebase service account private key (`\n`-escaped) |
+| `ALLOWED_GOOGLE_EMAILS`  | yes      | —             | Comma-separated Google emails allowed to sign in |
 
 Example `.env` for the bundled `docker-compose.yml`:
 
@@ -171,6 +177,10 @@ NODE_ENV=development
 MONGO_URI=mongodb://admin:password123@localhost:27017/portfolio_db?authSource=admin
 JWT_SECRET=replace-me-with-a-long-random-string
 JWT_EXPIRES_IN=1d
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-firebase-project-id.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+ALLOWED_GOOGLE_EMAILS=you@gmail.com
 ```
 
 ## Available Scripts
@@ -190,12 +200,11 @@ Base URL: `http://localhost:${PORT}/api`
 | Method   | Path             | Auth | Roles          | Description                                                      |
 | -------- | ---------------- | ---- | -------------- | -------------------------------------------------------------- |
 | `GET`    | `/health`        | —    | —              | Liveness probe                                                  |
-| `POST`   | `/auth/register` | —    | —              | Public sign-up; always creates a `USER`. Returns `{ token, user }` |
-| `POST`   | `/auth/login`    | —    | —              | Returns `{ token, user }` on valid credentials                 |
+| `POST`   | `/auth/google`   | —    | —              | Verifies a Firebase Google `idToken`; rejects emails outside `ALLOWED_GOOGLE_EMAILS`. Returns `{ token, user }` |
 | `GET`    | `/users`         | JWT  | `ADMIN`        | List users                                                      |
-| `POST`   | `/users`         | JWT  | `ADMIN`        | Create user, including assigning a role (password hashed with bcrypt) |
+| `POST`   | `/users`         | JWT  | `ADMIN`        | Pre-provision a user (name, email, role) ahead of their first Google sign-in |
 | `GET`    | `/users/:id`     | JWT  | self or `ADMIN`| Get user by id                                                  |
-| `PUT`    | `/users/:id`     | JWT  | self or `ADMIN`| Update user (password re-hashed if present; non-admins cannot change `role`) |
+| `PUT`    | `/users/:id`     | JWT  | self or `ADMIN`| Update user (non-admins cannot change `role`)                   |
 | `DELETE` | `/users/:id`     | JWT  | `ADMIN`        | Delete user                                                     |
 
 Protected requests must include the header `Authorization: Bearer <token>`. Unauthenticated requests return `401`; authenticated requests with an insufficient role return `403`.
