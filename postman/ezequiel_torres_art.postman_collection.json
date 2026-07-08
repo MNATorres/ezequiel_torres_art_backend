@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b1a7c2e0-1d4f-4a90-9c11-ezequieltorres01",
     "name": "Ezequiel Torres Art - Backend",
-    "description": "API collection for the Ezequiel Torres Art backend.\n\nUse the included environments (Local / Cloud) to switch the `baseUrl`.\n\nFlow:\n1. Run **Auth > Register** or **Auth > Login** first. The test script saves `token` and `userId` into the active environment automatically.\n2. The rest of the requests reuse `{{token}}` via Bearer auth and `{{userId}}` in the URL.",
+    "description": "API collection for the Ezequiel Torres Art backend.\n\nUse the included environments (Local / Cloud) to switch the `baseUrl`.\n\nAuth is Google sign-in only: `POST /api/auth/google` verifies a Firebase ID token and returns the backend's own `{ token, user }`. Postman cannot perform the Google popup, so there are two ways to get a working token:\n\n**A) Test the protected routes (easiest).** Log into the manager in the browser, copy the JWT it stored in localStorage under `token`, and paste it into this environment's `token` variable. Every protected request reuses `{{token}}` via Bearer auth.\n\n**B) Test `POST /api/auth/google` itself.** You need a real Firebase ID token. In the manager (dev build) sign in with Google, open the browser console, run `await getFirebaseIdToken()`, copy the string into this environment's `idToken` variable, then run **Auth > Google Sign-In** — its test script saves the returned `token` and `userId` automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -53,62 +53,7 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Register",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 201', function () {",
-                  "  pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "const res = pm.response.json();",
-                  "if (res && res.token) {",
-                  "  pm.environment.set('token', res.token);",
-                  "  console.log('Saved token to environment.');",
-                  "}",
-                  "if (res && res.user && res.user._id) {",
-                  "  pm.environment.set('userId', res.user._id);",
-                  "  console.log('Saved userId:', res.user._id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Ezequiel Torres\",\n  \"email\": \"ezequiel@example.com\",\n  \"password\": \"secret123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
-            },
-            "description": "Public registration. Always creates a USER (role is forced server-side). Returns { token, user } and the test script stores both."
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
+          "name": "Google Sign-In",
           "event": [
             {
               "listen": "test",
@@ -145,20 +90,20 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"ezequiel@example.com\",\n  \"password\": \"secret123\"\n}"
+              "raw": "{\n  \"idToken\": \"{{idToken}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
+              "raw": "{{baseUrl}}/api/auth/google",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "auth",
-                "login"
+                "google"
               ]
             },
-            "description": "Logs in and returns { token, user }. The test script saves the token and userId into the active environment."
+            "description": "Verifies a Firebase Google ID token and returns { token, user }. Set `idToken` in the environment first (sign in on the manager dev build, then run `await getFirebaseIdToken()` in the browser console). Rejects emails outside ALLOWED_GOOGLE_EMAILS (403) or unverified emails (401). The test script saves the returned backend token and userId."
           },
           "response": []
         }
@@ -198,7 +143,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"secret123\",\n  \"role\": \"USER\"\n}"
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"role\": \"USER\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/users",
@@ -210,7 +155,7 @@
                 "users"
               ]
             },
-            "description": "Creates a user with an arbitrary role. ADMIN only."
+            "description": "Pre-provisions a user (name, email, role) ahead of their first Google sign-in. No password — identity is verified by Google. ADMIN only."
           },
           "response": []
         },
