@@ -3,11 +3,11 @@ import { CreateUserInput, UpdateUserInput } from '../schemas/user.schema';
 
 export class UserRepository {
   async findAll(): Promise<IUser[]> {
-    return UserModel.find().select('-password').exec();
+    return UserModel.find().exec();
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return UserModel.findById(id).select('-password').exec();
+    return UserModel.findById(id).exec();
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
@@ -20,10 +20,10 @@ export class UserRepository {
   }
 
   async update(id: string, userData: UpdateUserInput): Promise<IUser | null> {
-    return UserModel.findByIdAndUpdate(id, userData, { new: true }).select('-password').exec();
+    return UserModel.findByIdAndUpdate(id, userData, { new: true }).exec();
   }
 
   async delete(id: string): Promise<IUser | null> {
-    return UserModel.findByIdAndDelete(id).select('-password').exec();
+    return UserModel.findByIdAndDelete(id).exec();
   }
 }

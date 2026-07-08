@@ -8,35 +8,35 @@ const VALID_ID = '507f1f77bcf86cd799439011';
 describe('createUserSchema', () => {
   it('accepts a valid user (role optional)', () => {
     const result = createUserSchema.safeParse({
-      body: { name: 'Ezequiel', email: 'a@b.com', password: 'secret123' },
+      body: { name: 'Ezequiel', email: 'a@b.com' },
     });
     assert.equal(result.success, true);
   });
 
   it('accepts an explicit valid role', () => {
     const result = createUserSchema.safeParse({
-      body: { name: 'Ezequiel', email: 'a@b.com', password: 'secret123', role: UserRole.ADMIN },
+      body: { name: 'Ezequiel', email: 'a@b.com', role: UserRole.ADMIN },
     });
     assert.equal(result.success, true);
   });
 
   it('rejects an unknown role value', () => {
     const result = createUserSchema.safeParse({
-      body: { name: 'Ezequiel', email: 'a@b.com', password: 'secret123', role: 'SUPERADMIN' },
+      body: { name: 'Ezequiel', email: 'a@b.com', role: 'SUPERADMIN' },
     });
     assert.equal(result.success, false);
   });
 
-  it('rejects a short password', () => {
+  it('rejects a name shorter than 2 characters', () => {
     const result = createUserSchema.safeParse({
-      body: { name: 'Ezequiel', email: 'a@b.com', password: '123' },
+      body: { name: 'E', email: 'a@b.com' },
     });
     assert.equal(result.success, false);
   });
 
   it('rejects an invalid email', () => {
     const result = createUserSchema.safeParse({
-      body: { name: 'Ezequiel', email: 'nope', password: 'secret123' },
+      body: { name: 'Ezequiel', email: 'nope' },
     });
     assert.equal(result.success, false);
   });

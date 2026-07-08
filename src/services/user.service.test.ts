@@ -1,6 +1,5 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import bcrypt from 'bcrypt';
 import { UserService } from './user.service';
 import { UserRepository } from '../repositories/user.repository';
 import { UserRole } from '../models/user.model';
@@ -9,14 +8,12 @@ const createUserDocument = (overrides = {}) => ({
   _id: '507f1f77bcf86cd799439011',
   name: 'Ezequiel Torres',
   email: 'ezequiel@example.com',
-  password: '$2b$10$placeholder',
   role: UserRole.USER,
   toObject() {
     return {
       _id: this._id,
       name: this.name,
       email: this.email,
-      password: this.password,
       role: this.role,
     };
   },
@@ -25,7 +22,7 @@ const createUserDocument = (overrides = {}) => ({
 
 describe('UserService', () => {
   it('returns all users from the repository', async () => {
-    const users = [createUserDocument({ password: undefined })];
+    const users = [createUserDocument()];
     const repository = {
       findAll: async () => users,
     } as unknown as UserRepository;
@@ -36,7 +33,7 @@ describe('UserService', () => {
   });
 
   it('returns a user by id', async () => {
-    const user = createUserDocument({ password: undefined });
+    const user = createUserDocument();
     const repository = {
       findById: async (id: string) => (id === '507f1f77bcf86cd799439011' ? user : null),
     } as unknown as UserRepository;
@@ -57,7 +54,7 @@ describe('UserService', () => {
     );
   });
 
-  it('creates a user with a hashed password and omits password from the response', async () => {
+  it('creates a user via the repository', async () => {
     let createdPayload: Record<string, unknown> | undefined;
     const repository = {
       findByEmail: async () => null,
@@ -70,20 +67,12 @@ describe('UserService', () => {
     const result = await new UserService(repository).createUser({
       name: 'Ezequiel Torres',
       email: 'ezequiel@example.com',
-      password: 'secret123',
       role: UserRole.ADMIN,
     });
 
     assert.ok(createdPayload);
-    assert.notEqual(createdPayload.password, 'secret123');
-    assert.equal(await bcrypt.compare('secret123', createdPayload.password as string), true);
-    assert.deepEqual(result, {
-      _id: '507f1f77bcf86cd799439011',
-      name: 'Ezequiel Torres',
-      email: 'ezequiel@example.com',
-      role: UserRole.ADMIN,
-    });
-    assert.equal('password' in result, false);
+    assert.equal(createdPayload.email, 'ezequiel@example.com');
+    assert.equal(result.role, UserRole.ADMIN);
   });
 
   it('throws when creating a user with an existing email', async () => {
@@ -99,15 +88,14 @@ describe('UserService', () => {
         new UserService(repository).createUser({
           name: 'Ezequiel Torres',
           email: 'ezequiel@example.com',
-          password: 'secret123',
         }),
       /Email already in use/
     );
   });
 
-  it('hashes password before updating a user', async () => {
+  it('updates a user via the repository', async () => {
     let updatePayload: Record<string, unknown> | undefined;
-    const updatedUser = createUserDocument({ password: undefined, name: 'Updated Name' });
+    const updatedUser = createUserDocument({ name: 'Updated Name' });
     const repository = {
       update: async (_id: string, payload: Record<string, unknown>) => {
         updatePayload = payload;
@@ -117,13 +105,10 @@ describe('UserService', () => {
 
     const result = await new UserService(repository).updateUser('507f1f77bcf86cd799439011', {
       name: 'Updated Name',
-      password: 'newSecret123',
     });
 
     assert.equal(result, updatedUser);
-    assert.ok(updatePayload);
-    assert.notEqual(updatePayload.password, 'newSecret123');
-    assert.equal(await bcrypt.compare('newSecret123', updatePayload.password as string), true);
+    assert.deepEqual(updatePayload, { name: 'Updated Name' });
   });
 
   it('throws when updating a missing user', async () => {
@@ -138,7 +123,7 @@ describe('UserService', () => {
   });
 
   it('deletes a user by id', async () => {
-    const user = createUserDocument({ password: undefined });
+    const user = createUserDocument();
     const repository = {
       delete: async () => user,
     } as unknown as UserRepository;
