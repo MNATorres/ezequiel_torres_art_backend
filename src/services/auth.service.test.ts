@@ -77,6 +77,86 @@ describe('AuthService', () => {
     assert.equal(result.user.role, UserRole.USER);
   });
 
+  it('falls back to the email as name when Google returns no name', async () => {
+    let createdPayload: Record<string, unknown> | undefined;
+    const repository = {
+      findByEmail: async () => null,
+      create: async (payload: Record<string, unknown>) => {
+        createdPayload = payload;
+        return createUser({ ...payload, role: UserRole.USER });
+      },
+    } as unknown as UserRepository;
+    // No `name` field on the decoded token.
+    const verifyGoogleToken = async (): Promise<GoogleTokenPayload> => ({
+      email: ALLOWED_EMAIL,
+      email_verified: true,
+    });
+
+    await new AuthService(repository, verifyGoogleToken).googleSignIn({ idToken: 'valid-token' });
+
+    assert.ok(createdPayload);
+    assert.equal(createdPayload.name, ALLOWED_EMAIL);
+  });
+
+  it('normalizes the email casing before matching the allowlist', async () => {
+    // Google returns the same address but upper-cased; it must still be allowed
+    // and looked up in its normalized (lower-case) form so casing cannot bypass
+    // the allowlist or split one identity across two records.
+    let lookedUpEmail: string | undefined;
+    const user = createUser({ email: ALLOWED_EMAIL });
+    const repository = {
+      findByEmail: async (email: string) => {
+        lookedUpEmail = email;
+        return user;
+      },
+    } as unknown as UserRepository;
+    const verifyGoogleToken = async (): Promise<GoogleTokenPayload> => ({
+      email: ALLOWED_EMAIL.toUpperCase(),
+      email_verified: true,
+      name: user.name,
+    });
+
+    const result = await new AuthService(repository, verifyGoogleToken).googleSignIn({
+      idToken: 'valid-token',
+    });
+
+    assert.equal(lookedUpEmail, ALLOWED_EMAIL);
+    assert.equal(result.user.email, ALLOWED_EMAIL);
+  });
+
+  it('does not re-create a user that already exists', async () => {
+    let createCalled = false;
+    const user = createUser({ email: ALLOWED_EMAIL });
+    const repository = {
+      findByEmail: async () => user,
+      create: async () => {
+        createCalled = true;
+        return user;
+      },
+    } as unknown as UserRepository;
+    const verifyGoogleToken = async (): Promise<GoogleTokenPayload> => ({
+      email: ALLOWED_EMAIL,
+      email_verified: true,
+      name: user.name,
+    });
+
+    await new AuthService(repository, verifyGoogleToken).googleSignIn({ idToken: 'valid-token' });
+
+    assert.equal(createCalled, false);
+  });
+
+  it('throws when the Google token carries no email', async () => {
+    const repository = {} as unknown as UserRepository;
+    const verifyGoogleToken = async (): Promise<GoogleTokenPayload> => ({
+      email_verified: true,
+    });
+
+    await assert.rejects(
+      () => new AuthService(repository, verifyGoogleToken).googleSignIn({ idToken: 'valid-token' }),
+      /Invalid Google account/
+    );
+  });
+
   it('throws when the Google email is not in the allowlist', async () => {
     const repository = {
       findByEmail: async () => {
